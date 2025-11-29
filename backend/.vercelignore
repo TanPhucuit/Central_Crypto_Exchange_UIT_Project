@@ -1,0 +1,11 @@
+/vendor
+/node_modules
+.env
+.env.local
+*.log
+test-*.php
+get-schema.php
+README.md
+SETUP.md
+.git
+.gitignore

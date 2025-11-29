@@ -1,0 +1,1229 @@
+.futures-trading-page {
+  max-width: 1400px;
+  padding: var(--spacing-lg);
+}
+
+/* Make page wrapper relative so we can position the positions card relative to viewport/sidebar */
+.futures-trading-page {
+  position: relative;
+}
+
+/* Coins Section */
+.coins-section {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-lg);
+}
+
+.coins-section h3 {
+  margin-bottom: var(--spacing-md);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.coins-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.coin-card {
+  background: var(--dark-bg-card);
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.coin-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
+}
+
+.coin-card.active {
+  border-color: var(--primary-color);
+  background: var(--glass-bg);
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+}
+
+.coin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Make the coin selector visually overlay the chart when rendered inside .chart-card */
+.coin-grid {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 12px;
+}
+
+/* When coin-grid is placed inside the chart card it should be absolute positioned
+   so it stays attached to the chart and scrolls with it. */
+.trading-full-width .chart-card {
+  position: relative;
+}
+
+.trading-full-width .chart-card .coin-grid {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: calc(100% - 24px);
+  z-index: 60;
+  /* Allow wheel/scroll to pass through the coin-grid container so the page/chart can be scrolled.
+     Keep clicks enabled on the individual coin cards. */
+  pointer-events: none;
+}
+
+.trading-full-width .chart-card .coin-grid .coin-card {
+  pointer-events: auto;
+}
+
+/* Portal container for coin-grid (rendered into document.body) */
+.coin-grid-portal {
+  position: fixed;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.coin-grid-portal .coin-card {
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+
+.coin-symbol {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.coin-change {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.coin-change.positive {
+  color: var(--success-color);
+}
+
+.coin-change.negative {
+  color: var(--danger-color);
+}
+
+.coin-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.coin-volume {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.empty-selection {
+  text-align: center;
+  padding: 80px var(--spacing-lg);
+  margin: var(--spacing-xl) 0;
+}
+
+.empty-selection h2 {
+  font-size: 24px;
+  margin-bottom: var(--spacing-md);
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.empty-selection p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* Full Width Chart */
+.chart-full-section {
+  background-color: var(--dark-bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  width: 100%;
+}
+
+.no-pair-selected {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 80px var(--spacing-lg);
+  text-align: center;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-pair-selected p {
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+.trading-pair-header {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.trading-pair-header h2 {
+  font-size: 24px;
+  margin-bottom: var(--spacing-md);
+}
+
+/* PnL Button in Header */
+.btn-pnl-header {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.btn-pnl-header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4);
+}
+
+.pair-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.current-price {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.price-change {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.wallet-balance {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--dark-bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.balance-value {
+  font-weight: 600;
+  color: var(--success-color);
+}
+
+/* PnL Statistics Section */
+.pnl-section {
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-header h4 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.pnl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.pnl-card {
+  background-color: var(--dark-bg);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s;
+}
+
+.pnl-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 16px rgba(0, 82, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.pnl-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.pnl-value {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+}
+
+.pnl-value.positive {
+  color: var(--success-color);
+  text-shadow: 0 0 10px rgba(5, 196, 107, 0.3);
+}
+
+.pnl-value.negative {
+  color: var(--danger-color);
+  text-shadow: 0 0 10px rgba(255, 56, 56, 0.3);
+}
+
+.pnl-percent {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pnl-detail {
+  font-size: 12px;
+}
+
+/* Futures Long/Short Order Panel */
+.order-panel-futures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Background decoration */
+.order-panel-futures::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: -40px;
+  right: -40px;
+  bottom: -40px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(239, 83, 80, 0.08) 0%, transparent 50%),
+    linear-gradient(135deg, transparent 40%, rgba(16, 185, 129, 0.03) 60%, transparent 80%);
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.order-panel-futures::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: -40px;
+  right: -40px;
+  bottom: -40px;
+  background-image:
+    linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.5;
+  animation: gridMove 20s linear infinite;
+}
+
+.long-side {
+  border-top: 3px solid var(--success-color);
+  background-color: var(--dark-bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid var(--success-color);
+  padding: var(--spacing-lg);
+}
+
+.short-side {
+  border-top: 3px solid var(--danger-color);
+  background-color: var(--dark-bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid var(--danger-color);
+  padding: var(--spacing-lg);
+}
+
+.leverage-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.leverage-section label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.leverage-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+}
+
+.leverage-slider .slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-color);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.leverage-slider .slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.leverage-slider .slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px var(--primary-color);
+}
+
+.leverage-value {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--primary-color);
+  min-width: 45px;
+  text-align: right;
+}
+
+.order-panel-compact .btn-buy,
+.order-panel-compact .btn-sell,
+.futures-trading-page .side-switch-compact button.btn-buy,
+.futures-trading-page .side-switch-compact button.btn-sell {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.order-panel-compact .btn-buy.active,
+.futures-trading-page .side-switch-compact button.btn-buy.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+}
+
+.order-panel-compact .btn-sell.active,
+.futures-trading-page .side-switch-compact button.btn-sell.active {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+
+/* Shared styles from Spot */
+.input-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.input-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.input-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0 12px;
+  transition: all 0.2s;
+}
+
+.input-box:focus-within {
+  border-color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.input-box input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 12px 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.input-box input:focus {
+  outline: none;
+}
+
+.input-box .input-suffix {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.percentage-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: var(--spacing-md);
+}
+
+.percentage-buttons button {
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.percentage-buttons button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.order-summary {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.summary-row span:first-child {
+  color: var(--text-secondary);
+}
+
+.summary-row span:last-child {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.btn-trade {
+  width: 100%;
+  padding: 14px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.balance-footer {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.order-type-tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.tab-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+.coming-soon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+}
+
+.coming-soon-content {
+  text-align: center;
+  max-width: 600px;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+}
+
+.coming-soon-content h2 {
+  font-size: 36px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.coming-soon-content>p {
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.feature-item {
+  font-size: 16px;
+  padding: var(--spacing-md);
+  background-color: var(--dark-bg);
+  border-radius: var(--radius-md);
+  text-align: left;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s;
+}
+
+.feature-item:hover {
+  border-color: var(--primary-color);
+  transform: translateX(5px);
+}
+
+/* PnL Button Section */
+.pnl-button-section {
+  margin: var(--spacing-xl) 0;
+  text-align: center;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xl);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.modal-header h2 {
+  font-size: 24px;
+  margin: 0;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 36px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: var(--dark-bg-card);
+  color: var(--text-primary);
+  transform: rotate(90deg);
+}
+
+/* PnL Modal Styles */
+.pnl-modal {
+  max-width: 900px;
+  width: 90%;
+}
+
+.pnl-modal-body {
+  padding: var(--spacing-xl);
+}
+
+.pnl-modal .pnl-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .coins-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pnl-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-full-section {
+    padding: var(--spacing-md);
+  }
+
+  .trading-pair-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .btn-pnl-header {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .order-panel-futures {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .coins-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pnl-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* === Market-only futures layout === */
+  .futures-grid {
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: flex-start;
+  }
+
+  .futures-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  .futures-right {
+    width: 38%;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  .wallet-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .wallet-banner .badge {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--primary-color);
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .futures-order-panel .alert {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .lever-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .lever-field input[type='range'] {
+    width: 100%;
+  }
+
+
+  .positions-list {
+    display: block;
+    width: 100%;
+    gap: var(--spacing-md);
+  }
+
+  /* When positions-list uses glass-card, make it wider and stretch */
+  .positions-list.glass-card {
+    /* Anchor the positions card adjacent to the left sidebar.
+     Adjust --sidebar-width to match your sidebar exact width (in px). */
+    --sidebar-width: 250px;
+    /* match Sidebar.css width */
+    margin-left: var(--sidebar-width);
+    margin-right: 24px;
+    width: calc(100% - var(--sidebar-width) - 48px);
+    max-width: none;
+    padding: calc(var(--spacing-md) * 1.25);
+    background: var(--glass-bg);
+    box-sizing: border-box;
+  }
+
+  /* Force the positions card to be fixed (anchored) next to the sidebar so it uses the empty left space */
+  .positions-list.glass-card.fixed-left {
+    --sidebar-width: 250px;
+    /* match Sidebar.css width */
+    --top-offset: 90px;
+    /* distance from top to place the card under header/tabs */
+    /* Use fixed positioning relative to viewport so card sits beside the sidebar */
+    position: fixed !important;
+    top: var(--top-offset) !important;
+    /* left/width/right are set dynamically by JS (inline styles) to avoid CSS priority conflicts */
+    left: auto !important;
+    right: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    z-index: 9999 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    display: flex !important;
+    flex-direction: column !important;
+    /* fit within viewport leaving some bottom gap for taskbars/controls */
+    max-height: calc(100vh - var(--top-offset) - 48px) !important;
+  }
+
+  .positions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+    overflow-x: auto;
+    /* allow horizontal scrolling when many columns / small screens */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    /* allow vertical scrolling inside the positions panel */
+    overflow-y: auto;
+    flex: 1 1 auto;
+  }
+
+  .position-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    background: transparent;
+    flex-wrap: nowrap;
+    /* prevent wrapping into multiple lines */
+  }
+
+  /* Make each info cell take proportional room; actions fixed width */
+  .position-row>.position-cell {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Column width allocations (percent-based) */
+  .position-cell.symbol {
+    order: 0;
+    flex: 0 0 220px;
+    display: flex;
+  }
+
+  .position-cell.entry {
+    order: 1;
+    flex: 1 1 420px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .position-cell.size {
+    order: 2;
+    flex: 0 0 auto;
+  }
+
+  .position-cell.leverage {
+    order: 3;
+    flex: 0 0 160px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .position-cell.opened {
+    display: none;
+  }
+
+  .position-cell.profit {
+    order: 5;
+    flex: 0 0 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: 8px;
+  }
+
+  .position-row .position-actions {
+    display: none;
+  }
+
+  .position-row .position-actions {
+    flex: 0 0 160px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* If content overflows horizontally, show a subtle gradient to indicate scroll */
+  .positions-grid::after {
+    content: '';
+    position: sticky;
+    right: 0;
+    height: 100%;
+    width: 40px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.25));
+  }
+
+  .position-row .tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .position-row .tag.buy {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--success-color);
+  }
+
+  .position-row .tag.sell {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger-color);
+  }
+
+  .position-row .text-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  /* New cell label/value styles for single-row layout */
+  /* Make label/value inline (Label: Value) */
+  .position-cell {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    min-width: 140px;
+  }
+
+  .position-cell {
+    white-space: nowrap;
+  }
+
+  .cell-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .cell-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+  }
+
+  .position-cell .tag {
+    margin-right: 10px;
+  }
+
+  .positions-strip {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+    min-width: 920px;
+    /* encourage a wide inner strip so rows span horizontally */
+  }
+
+  /* Card header and debug controls */
+  .positions-list .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .positions-debug-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .positions-debug-controls .dbg-btn {
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 12px;
+  }
+
+  .positions-debug-controls .dbg-btn.active {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  /* If viewport is narrower, allow scrolling but keep items on one line */
+  @media (max-width: 1400px) {
+    .positions-list.glass-card {
+      width: calc(100vw - 80px);
+    }
+
+    .positions-strip {
+      min-width: 1000px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .positions-list.glass-card {
+      width: calc(100vw - 40px);
+    }
+
+    .positions-strip {
+      min-width: 900px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .futures-grid {
+      flex-direction: column;
+    }
+
+    .futures-right {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .position-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .chart-full-section {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* Button utilities used across trading pages */
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+/* Tag Styles for Positions */
+.tag {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.tag.buy {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.tag.sell {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Notification Toast */
+.notification-toast {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  font-weight: 500;
+  z-index: 99999;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease;
+  min-width: 300px;
+}
+
+.notification-toast.success {
+  background: rgba(16, 185, 129, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.notification-toast.error {
+  background: rgba(239, 68, 68, 0.9);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.notification-toast button {
+  background: transparent;
+  border: none;
+  color: white;
+  margin-left: auto;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.notification-toast button:hover {
+  opacity: 1;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

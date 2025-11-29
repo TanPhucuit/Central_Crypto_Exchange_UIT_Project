@@ -1,0 +1,168 @@
+.merchant-p2p-page {
+  max-width: 1400px;
+}
+
+.page-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.page-header h1 {
+  font-size: 32px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.alert {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  position: relative;
+}
+
+.alert-danger {
+  background-color: rgba(255, 56, 56, 0.1);
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+}
+
+.alert-success {
+  background-color: rgba(5, 196, 107, 0.1);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
+}
+
+.alert-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.orders-table-container {
+  background-color: var(--dark-bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table thead {
+  background-color: var(--dark-bg);
+}
+
+.orders-table th {
+  padding: var(--spacing-md);
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.orders-table td {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+  font-size: 14px;
+}
+
+.orders-table tbody tr:hover {
+  background-color: var(--dark-bg);
+}
+
+.type-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.type-badge.buy {
+  background-color: rgba(5, 196, 107, 0.1);
+  color: var(--success-color);
+}
+
+.type-badge.sell {
+  background-color: rgba(255, 56, 56, 0.1);
+  color: var(--danger-color);
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.status-badge.paid {
+  background-color: rgba(5, 196, 107, 0.1);
+  color: var(--success-color);
+}
+
+.status-badge.waiting {
+  background-color: rgba(255, 168, 1, 0.1);
+  color: var(--warning-color);
+}
+
+.status-badge.completed {
+  background-color: rgba(5, 196, 107, 0.1);
+  color: var(--success-color);
+}
+
+.status-badge.cancelled {
+  background-color: rgba(255, 56, 56, 0.1);
+  color: var(--danger-color);
+}
+
+.btn-small {
+  padding: 6px 16px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.text-center {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--spacing-xl);
+}
+
+.text-success {
+  color: var(--success-color);
+}
+
+.text-danger {
+  color: var(--danger-color);
+}
+
+.text-muted {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1024px) {
+  .orders-table-container {
+    overflow-x: scroll;
+  }
+  
+  .orders-table {
+    min-width: 1000px;
+  }
+}

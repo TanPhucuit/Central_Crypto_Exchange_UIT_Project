@@ -1,0 +1,7 @@
+/vendor/
+.env
+.env.local
+composer.lock
+.DS_Store
+Thumbs.db
+*.log

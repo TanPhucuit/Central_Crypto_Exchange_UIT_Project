@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Flow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Backend Login API</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Login với thông tin SAI</h3>
+        <button onclick="testWrongLogin()">Test Wrong Login</button>
+        <div id="result1"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Login với thông tin ĐÚNG</h3>
+        <p>Trước tiên đăng ký user mới:</p>
+        <button onclick="registerUser()">Register New User</button>
+        <div id="result2"></div>
+        
+        <p>Sau đó login:</p>
+        <button onclick="testCorrectLogin()">Test Correct Login</button>
+        <div id="result3"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        let testUsername = 'testuser_' + Date.now();
+        let testPassword = 'password123';
+
+        async function testWrongLogin() {
+            const resultDiv = document.getElementById('result1');
+            resultDiv.innerHTML = '<div>Testing...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        login: 'wronguser_' + Date.now(),
+                        password: 'wrongpassword'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ FAILED: Login should NOT succeed with wrong credentials!</div>
+                        <div class="result">Status: ${response.status}\n${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ PASSED: Login correctly rejected</div>
+                        <div class="result">Status: ${response.status}\n${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">Network error: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function registerUser() {
+            const resultDiv = document.getElementById('result2');
+            resultDiv.innerHTML = '<div>Registering...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: testUsername,
+                        email: testUsername + '@test.com',
+                        password: testPassword,
+                        role: 'normal'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ User registered successfully</div>
+                        <div class="result">Username: ${testUsername}\nPassword: ${testPassword}\n\n${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">Registration failed: ${data.message}</div>
+                        <div class="result">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">Network error: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function testCorrectLogin() {
+            const resultDiv = document.getElementById('result3');
+            resultDiv.innerHTML = '<div>Testing...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        login: testUsername,
+                        password: testPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ PASSED: Login successful</div>
+                        <div class="result">Status: ${response.status}\n${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ FAILED: Login should succeed with correct credentials!</div>
+                        <div class="result">Status: ${response.status}\n${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">Network error: ${error.message}</div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
