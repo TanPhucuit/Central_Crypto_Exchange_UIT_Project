@@ -14,7 +14,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 30000, // Increased to 30s to handle TiDB latency
 });
 
 // Add response interceptor for error handling + lightweight retries
@@ -39,15 +39,21 @@ api.interceptors.response.use(
     if (error.response) {
       // Server responded with error status (4xx, 5xx)
       console.error('API Error:', error.response.data);
+      console.error('Status:', error.response.status);
+      console.error('URL:', error.config?.url);
       return Promise.reject(error.response.data);
     }
 
     if (error.request) {
       // Request made but no response received
       console.error('Network Error:', error.message);
+      console.error('Request URL:', error.config?.url);
+      console.error('Base URL:', error.config?.baseURL);
+      console.error('Full URL:', error.config?.baseURL + error.config?.url);
+      console.error('Error Code:', error.code);
       return Promise.reject({
         success: false,
-        message: 'Khong the ket noi den server. Vui long kiem tra ket noi mang.'
+        message: 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.'
       });
     }
 
@@ -55,7 +61,7 @@ api.interceptors.response.use(
     console.error('Error:', error.message);
     return Promise.reject({
       success: false,
-      message: error.message || 'Da xay ra loi khong xac dinh'
+      message: error.message || 'Đã xảy ra lỗi không xác định'
     });
   }
 );
@@ -120,36 +126,42 @@ export const walletAPI = {
     return response.data;
   },
 
-  // Get wallet by type
-  getWalletByType: async (userId, type) => {
-    const response = await api.get(`/wallet/type/${type}?user_id=${userId}`);
+  // Get wallet by currency or type
+  getWalletByCurrency: async (userId, currency) => {
+    const response = await api.get(`/wallet/currency/${currency}?user_id=${userId}`);
     return response.data;
   },
 
-  // Get wallet with properties (holdings)
-  getWalletWithProperties: async (userId, walletId) => {
-    const response = await api.get(`/wallet/${walletId}/properties?user_id=${userId}`);
+  // Alias for getWalletByCurrency (type can be 'spot', 'future', etc.)
+  getWalletByType: async (userId, type) => {
+    const response = await api.get(`/wallet/currency/${type}?user_id=${userId}`);
     return response.data;
   },
 
   // Create new wallet
-  createWallet: async (userId, type) => {
+  createWallet: async (userId, currency) => {
     const response = await api.post('/wallet', {
       user_id: userId,
-      type: type, // 'fund', 'spot', 'future'
+      currency: currency, // 'USDT', 'BTC', 'ETH', etc.
     });
     return response.data;
   },
 
-  // Internal Transfer
+  // Internal Transfer between currencies
   internalTransfer: async (userId, { fromType, toType, amount, note }) => {
-    const response = await api.post('/wallet/internal-transfer', {
+    const response = await api.post('/wallet/transfer', {
       user_id: userId,
       from_type: fromType,
       to_type: toType,
       amount,
-      note,
+      note: note || ''
     });
+    return response.data;
+  },
+
+  // Get wallet with properties (assets)
+  getWalletWithProperties: async (userId, walletId) => {
+    const response = await api.get(`/wallet/${walletId}/properties?user_id=${userId}`);
     return response.data;
   },
 };
@@ -214,6 +226,7 @@ export const tradingAPI = {
     const response = await api.get(`/trading/futures/open?user_id=${userId}`);
     return response.data;
   },
+
   // Fetch futures history for a specific future wallet
   getFutureHistory: async (userId, walletId) => {
     const response = await api.get(`/trading/futures/${walletId}/history?user_id=${userId}`);
@@ -253,16 +266,25 @@ export const p2pAPI = {
     return response.data;
   },
 
-  // Transfer payment for order
+  // Transfer payment for order (User transfers VND for buy orders)
   transferPayment: async (orderId, paymentData) => {
     const response = await api.post(`/p2p/orders/${orderId}/transfer`, paymentData);
     return response.data;
   },
 
-  // Merchant confirms and releases USDT
-  confirmAndRelease: async (orderId, merchantId) => {
+  // Merchant transfers payment for sell orders
+  merchantTransferPayment: async (orderId, paymentData) => {
+    const response = await api.post(`/p2p/orders/${orderId}/merchant-transfer`, paymentData);
+    return response.data;
+  },
+
+  // Confirm and release USDT (for both merchant and user)
+  // For buy orders: merchant_id confirms and releases USDT to user
+  // For sell orders: user_id confirms and releases USDT to merchant
+  confirmAndRelease: async (orderId, userId, merchantId) => {
     const response = await api.post(`/p2p/orders/${orderId}/confirm`, {
-      merchant_id: merchantId
+      user_id: userId,
+      merchant_id: merchantId || userId // If merchantId not provided, use userId for backward compatibility
     });
     return response.data;
   },
@@ -294,13 +316,12 @@ export const bankAPI = {
   },
 
   // Transfer funds between linked bank accounts
-  transferFunds: async (userId, { fromAccount, toAccount, amount, note }) => {
+  transferFunds: async (userId, { fromAccount, toAccount, amount }) => {
     const response = await api.post('/bank/transfer', {
       user_id: userId,
       from_account: fromAccount,
       to_account: toAccount,
       amount,
-      note: note || '',
     });
     return response.data;
   },
@@ -362,6 +383,16 @@ export const merchantAPI = {
     const userId = merchantId || localStorage.getItem('user_id');
     const response = await api.post(`/p2p/orders/${orderId}/confirm`, {
       merchant_id: userId
+    });
+    return response.data;
+  },
+
+  // Update merchant USDT price
+  updatePrice: async (merchantId, price) => {
+    const userId = merchantId || localStorage.getItem('user_id');
+    const response = await api.post('/merchant/price', {
+      merchant_id: userId,
+      price: price
     });
     return response.data;
   },

@@ -1,11 +1,11 @@
 <?php
 
 return [
-    'host' => $_ENV['DB_HOST'] ?? 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com',
-    'port' => $_ENV['DB_PORT'] ?? '4000',
-    'database' => $_ENV['DB_DATABASE'] ?? 'crypto_exchange_2',
-    'username' => $_ENV['DB_USERNAME'] ?? '4GXQNpQMpv6LcyF.root',
-    'password' => $_ENV['DB_PASSWORD'] ?? '12345678',
+    'host' => '127.0.0.1',
+    'port' => '3306',
+    'database' => 'crypto_exchange_2',
+    'username' => 'root',
+    'password' => '123456',
     'charset' => 'utf8mb4',
     'collation' => 'utf8mb4_unicode_ci',
     'options' => [
@@ -14,6 +14,6 @@ return [
         PDO::ATTR_EMULATE_PREPARES => false,
     ],
     'ssl' => [
-        'ca' => $_ENV['DB_SSL_CA'] ?? 'isrgrootx1.pem'
+        'ca' => null
     ]
 ];

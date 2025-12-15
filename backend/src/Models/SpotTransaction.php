@@ -43,20 +43,23 @@ class SpotTransaction
 
     public function create(array $data): ?int
     {
+        // Schema: wallet_id, symbol, amount (qty), price, side
+        // Code passed: unit_numbers -> amount (qty)
+        // Code passed: index_price -> price
+        // Code passed: type -> side
+        
         $stmt = $this->db->prepare("
             INSERT INTO spot_transactions 
-            (wallet_id, symbol, type, index_price, unit_numbers, amount, profit)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (wallet_id, symbol, side, price, amount)
+            VALUES (?, ?, ?, ?, ?)
         ");
         
         $success = $stmt->execute([
             $data['wallet_id'],
             $data['symbol'],
-            $data['type'],
-            $data['index_price'],
-            $data['unit_numbers'],
-            $data['amount'],
-            $data['profit'] ?? null
+            $data['type'], // mapped to side
+            $data['index_price'], // mapped to price
+            $data['unit_numbers'] // mapped to amount (Qty)
         ]);
 
         return $success ? (int)$this->db->lastInsertId() : null;

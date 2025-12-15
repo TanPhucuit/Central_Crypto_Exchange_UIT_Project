@@ -170,4 +170,35 @@ class MerchantController
             return Response::error($response, 'Failed to set default account: ' . $e->getMessage(), 500);
         }
     }
+
+    /**
+     * Update merchant USDT price
+     */
+    public function updatePrice(Request $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $data = $request->getParsedBody();
+        $merchantId = $data['merchant_id'] ?? null;
+        $price = $data['price'] ?? null;
+
+        if (!$merchantId || $price === null) {
+            return Response::error($response, 'merchant_id and price are required', 400);
+        }
+
+        if ($price <= 0) {
+            return Response::error($response, 'Price must be greater than 0', 400);
+        }
+
+        try {
+            $userModel = new \App\Models\User();
+            $success = $userModel->updateUsdtPrice($merchantId, $price);
+
+            if ($success) {
+                return Response::success($response, ['price' => $price], 'USDT price updated successfully');
+            } else {
+                return Response::error($response, 'Failed to update price', 500);
+            }
+        } catch (\Exception $e) {
+            return Response::error($response, 'Failed to update price: ' . $e->getMessage(), 500);
+        }
+    }
 }

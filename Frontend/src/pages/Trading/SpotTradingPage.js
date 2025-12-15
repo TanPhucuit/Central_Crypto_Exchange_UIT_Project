@@ -48,7 +48,7 @@ const SpotTradingPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showAssets, setShowAssets] = useState(false);
-  const [activeTab, setActiveTab] = useState('trading');
+  const [spotTab, setSpotTab] = useState('assets');
 
   const baseAsset = useMemo(() => selectedPair.split('/')[0], [selectedPair]);
   const selectedMeta = useMemo(
@@ -247,23 +247,64 @@ const SpotTradingPage = () => {
   };
 
   const renderOrderRow = (order) => {
-    const typeLabel = order.type === 'buy' ? 'Mua' : 'Bán';
-    const timestamp = order.ts ? new Date(order.ts).toLocaleString('vi-VN') : '--';
+    const side = order.side || order.type || 'buy';
+    const typeLabel = side === 'buy' ? 'Mua' : 'Bán';
+    const timestamp = order.created_at 
+      ? new Date(order.created_at).toLocaleString('vi-VN') 
+      : order.ts 
+        ? new Date(order.ts).toLocaleString('vi-VN')
+        : '--';
     const orderBase = order.symbol?.includes('/') ? order.symbol.split('/')[0] : order.symbol;
+    const unitNumbers = order.unit_numbers || order.amount || 0;
+    const price = order.index_price || order.price || 0;
+    const totalAmount = order.amount_total || (unitNumbers * price);
+    
     return (
-      <div key={order.transaction_id} className="order-history-row">
-        <div>
-          <span className={`tag ${order.type}`}>{typeLabel}</span>
-          <p>{order.symbol}</p>
+      <div key={order.transaction_id || order.spot_transaction_id} className="order-history-row">
+        <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+          <span 
+            className={`tag ${side}`}
+            style={{
+              background: side === 'buy' 
+                ? 'linear-gradient(135deg, #10b981, #059669)' 
+                : 'linear-gradient(135deg, #ef4444, #dc2626)',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontWeight: 700,
+              fontSize: '14px',
+              textTransform: 'uppercase',
+              display: 'inline-flex',
+              alignItems: 'center',
+              boxShadow: side === 'buy' 
+                ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                : '0 2px 8px rgba(239, 68, 68, 0.3)'
+            }}
+          >
+            {typeLabel}
+          </span>
+          <div>
+            <p style={{fontSize: '16px', fontWeight: 700}}>{orderBase}</p>
+            <p className="text-secondary" style={{fontSize: '13px'}}>Spot</p>
+          </div>
         </div>
         <div>
+          <p className="text-secondary" style={{fontSize: '12px'}}>Số lượng</p>
           <strong>
-            {formatNumber(order.unit_numbers, 4)} {orderBase}
+            {formatNumber(unitNumbers, 4)} {orderBase}
           </strong>
-          <p className="text-secondary">@ {formatNumber(order.index_price)}</p>
+        </div>
+        <div>
+          <p className="text-secondary" style={{fontSize: '12px'}}>Giá</p>
+          <strong>${formatNumber(price)}</strong>
+        </div>
+        <div>
+          <p className="text-secondary" style={{fontSize: '12px'}}>Tổng tiền</p>
+          <strong>{formatNumber(totalAmount, 2)} USDT</strong>
         </div>
         <div className="text-right">
-          <span className="text-secondary">{timestamp}</span>
+          <p className="text-secondary" style={{fontSize: '12px'}}>Thời gian</p>
+          <span className="text-secondary" style={{fontSize: '13px'}}>{timestamp}</span>
         </div>
       </div>
     );
@@ -320,103 +361,30 @@ const SpotTradingPage = () => {
     );
   });
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'assets':
-        return (
-          <div className="tab-content assets-tab">
-            {holdingsLoading ? (
-              <p>Đang tải dữ liệu tài sản...</p>
-            ) : holdings.length === 0 ? (
-              <p className="text-secondary">Không có tài sản nào trong ví Spot.</p>
-            ) : (
-              <div className="asset-list">{assetRows}</div>
-            )}
-          </div>
-        );
-      case 'history':
-        return (
-          <div className="tab-content history-tab">
-            {openOrders.length === 0 ? (
-              <p className="text-secondary">Không có lịch sử giao dịch nào.</p>
-            ) : (
-              <div className="order-history-card glass-card">
-                <div className="card-header">
-                  <h3>Lịch sử giao dịch</h3>
-                </div>
-                <div className="order-history-list">
-                  {openOrders.map((order) => renderOrderRow(order))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      case 'trading':
-      default:
-        return (
-          <div>
-            <div className="coin-grid">
-              {SUPPORTED_PAIRS.map((pair) => (
-                <div
-                  key={pair.symbol}
-                  className={`coin-card ${selectedPair === pair.symbol ? 'active' : ''}`}
-                  onClick={() => setSelectedPair(pair.symbol)}
-                >
-                  <h3>{pair.name}</h3>
-                  <p>{formatNumber(priceTickers[pair.symbol]?.price || 0)} USDT</p>
-                </div>
-              ))}
-            </div>
-            <div className="chart-card" style={{ width: '100%', backgroundColor: '#000' }}>
-              <LivePriceChart symbol={selectedPair.replace('/', '')} height={520} />
-            </div>
-            <div className="order-panel-binance">
-              {/* Chỉ chỉnh sửa khung giao dịch phía dưới */}
-              <div className="wallet-banner">
-                <p>Số dư khả dụng</p>
-                {side === 'buy' ? (
-                  <h2>{formatNumber(usdtBalance)} USDT</h2>
-                ) : (
-                  <h2>{formatNumber(coinBalance, 6)} {baseAsset}</h2>
-                )}
-              </div>
-              <div className="order-field">
-                <label>Số lượng</label>
-                <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
-              </div>
-              <button className="btn btn-primary">Mua ngay</button>
-            </div>
-          </div>
-        );
-    }
-  };
+  // Removed - content moved to main layout
 
   return (
     <div className="spot-trading-page">
-      <div className="tabs">
-        <button
-          className={activeTab === 'trading' ? 'active' : ''}
-          onClick={() => setActiveTab('trading')}
-        >
-          Giao dịch
-        </button>
-        <button
-          className={activeTab === 'assets' ? 'active' : ''}
-          onClick={() => setActiveTab('assets')}
-        >
-          Tài sản
-        </button>
-        <button
-          className={activeTab === 'history' ? 'active' : ''}
-          onClick={() => setActiveTab('history')}
-        >
-          Lịch sử
-        </button>
-      </div>
-
-      {activeTab === 'trading' ? (
-        /* Full-width trading layout so chart can stretch */
-        <div className="trading-full-width">
+      {/* Toast Notifications */}
+      {success && (
+        <div className="toast-notification success">
+          <div className="toast-content">
+            <span className="toast-icon">✓</span>
+            <span className="toast-message">{success}</span>
+          </div>
+        </div>
+      )}
+      {error && (
+        <div className="toast-notification error">
+          <div className="toast-content">
+            <span className="toast-icon">⚠</span>
+            <span className="toast-message">{error}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Full-width trading layout so chart can stretch */}
+      <div className="trading-full-width">
           <div className="coin-grid">
             {SUPPORTED_PAIRS.map((pair) => (
               <div
@@ -491,10 +459,40 @@ const SpotTradingPage = () => {
               {loading ? 'Đang xử lý...' : side === 'buy' ? 'Mua ngay' : 'Bán ngay'}
             </button>
           </div>
+
+          {/* Tabs for assets and history below order panel */}
+          <div className="asset-history-container">
+            <div className="asset-tabs">
+              <button className={spotTab === 'assets' ? 'active' : ''} onClick={() => setSpotTab('assets')}>Tài sản</button>
+              <button className={spotTab === 'history' ? 'active' : ''} onClick={() => setSpotTab('history')}>Lịch sử</button>
+            </div>
+
+            {spotTab === 'assets' && (
+              <div className="assets-list-card">
+                {holdingsLoading ? (
+                  <p className="text-secondary">Đang tải dữ liệu tài sản...</p>
+                ) : holdings.length === 0 ? (
+                  <p className="text-secondary">Không có tài sản nào trong ví Spot.</p>
+                ) : (
+                  <div className="asset-list">{assetRows}</div>
+                )}
+              </div>
+            )}
+
+            {spotTab === 'history' && (
+              <div className="order-history-card glass-card">
+                {openOrders.length === 0 ? (
+                  <p className="text-secondary">Không có lịch sử giao dịch nào.</p>
+                ) : (
+                  <div className="order-history-list">
+                    {openOrders.map((order) => renderOrderRow(order))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        <div className="tab-content">{renderTabContent()}</div>
-      )}
+      }
       {/* Notifications */}
       {(success || error) && (
         <div className={`notification-toast ${success ? 'success' : 'error'}`}>

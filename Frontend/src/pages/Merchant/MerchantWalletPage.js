@@ -21,18 +21,51 @@ const MerchantWalletPage = () => {
 
     try {
       setLoading(true);
-      const response = await walletAPI.getWalletByType(userId, 'spot');
+      // Fetch all wallets (since there is no getWalletByType endpoint exposed)
+      const response = await walletAPI.getWallets(userId);
+      /* 
+         Backend now supports 'merchant' type wallets. 
+         We prioritize fetching 'merchant' wallet. 
+         Fallback to 'spot' for backward compatibility.
+      */
 
-      if (response.success && response.data) {
-        const balance = parseFloat(response.data.balance) || 0;
-        const lockedBalance = parseFloat(response.data.locked_balance || 0) || 0;
+      if (response && (response.success || Array.isArray(response.data))) {
+        // response.data from getWallets might be the array itself if api.js returns data directly, 
+        // OR it might be in response.data depending on api.js structure.
+        // api.js getWallets returns response.data. The controller returns { success: true, data: [...] }.
+        // So 'response' here is likely { success, data } OR just the data if api.js unwraps it.
+        // Checking api.js:
+        // getWallets: async (userId) => { const response = await api.get(...); return response.data; },
+        // Controller returns Response::success($response, $wallets); -> { success: true, data: [...] }
 
-        setWallet({
-          symbol: 'USDT',
-          balance,
-          locked_balance: lockedBalance,
-          available_balance: Math.max(balance - lockedBalance, 0)
-        });
+        const wallets = response.data || [];
+        console.log('MerchantWalletPage loaded wallets:', wallets);
+
+        // Find merchant wallet (case-insensitive) or fallback to spot
+        const merchantWallet = wallets.find(w => w.type && w.type.toLowerCase() === 'merchant')
+          || wallets.find(w => w.type && w.type.toLowerCase() === 'spot');
+
+        console.log('Selected merchant wallet:', merchantWallet);
+
+        if (merchantWallet) {
+          const balance = parseFloat(merchantWallet.balance) || 0;
+          const lockedBalance = parseFloat(merchantWallet.locked_balance || 0) || 0;
+
+          setWallet({
+            symbol: 'USDT',
+            balance,
+            locked_balance: lockedBalance,
+            available_balance: Math.max(balance - lockedBalance, 0)
+          });
+        } else {
+          console.log('No merchant or spot wallet found');
+          setWallet({
+            symbol: 'USDT',
+            balance: 0,
+            locked_balance: 0,
+            available_balance: 0
+          });
+        }
       } else {
         setWallet({
           symbol: 'USDT',

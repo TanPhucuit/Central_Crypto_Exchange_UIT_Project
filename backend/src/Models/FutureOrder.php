@@ -40,6 +40,38 @@ class FutureOrder
             return $this->normalizeOrders($rows);
     }
 
+    /**
+     * Get closed orders for a wallet
+     */
+    public function getClosedOrders(int $walletId, int $limit = 100): array
+    {
+        $limit = (int)$limit;
+        $stmt = $this->db->prepare("
+            SELECT * FROM future_orders 
+            WHERE wallet_id = ? AND close_ts IS NOT NULL
+            ORDER BY close_ts DESC
+            LIMIT {$limit}
+        ");
+        $stmt->execute([$walletId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->normalizeOrders($rows);
+    }
+
+    /**
+     * Get total realized profit from closed positions
+     */
+    public function getTotalClosedProfit(int $walletId): float
+    {
+        $stmt = $this->db->prepare("
+            SELECT COALESCE(SUM(profit), 0) as total_profit
+            FROM future_orders 
+            WHERE wallet_id = ? AND close_ts IS NOT NULL
+        ");
+        $stmt->execute([$walletId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (float)($result['total_profit'] ?? 0);
+    }
+
     public function findById(int $futureOrderId): ?array
     {
         $stmt = $this->db->prepare("
@@ -182,27 +214,19 @@ class FutureOrder
         }
 
         /**
-         * Normalize an array of order rows: cast numeric fields, ensure margin/leverage/position_size exist,
-         * and compute position_size = margin * leverage if missing or zero.
+         * Normalize an array of order rows: cast numeric fields to proper types
          */
         private function normalizeOrders(array $rows): array
         {
             $out = [];
             foreach ($rows as $r) {
-                $entry_price = isset($r['entry_price']) ? (float)$r['entry_price'] : 0.0;
-                $margin = isset($r['margin']) ? (float)$r['margin'] : 0.0;
-                $leverage = isset($r['leverage']) ? (int)$r['leverage'] : 1;
-                $position_size = isset($r['position_size']) ? (float)$r['position_size'] : 0.0;
-
-                if (empty($position_size) && $margin > 0 && $leverage > 0) {
-                    // per product spec, position_size = margin * leverage
-                    $position_size = $margin * $leverage;
-                }
-
-                $r['entry_price'] = $entry_price;
-                $r['margin'] = $margin;
-                $r['leverage'] = $leverage;
-                $r['position_size'] = $position_size;
+                // Cast fields to proper types, preserve original position_size from DB
+                $r['entry_price'] = isset($r['entry_price']) ? (float)$r['entry_price'] : 0.0;
+                $r['margin'] = isset($r['margin']) ? (float)$r['margin'] : 0.0;
+                $r['leverage'] = isset($r['leverage']) ? (int)$r['leverage'] : 1;
+                $r['position_size'] = isset($r['position_size']) ? (float)$r['position_size'] : 0.0;
+                $r['exit_price'] = isset($r['exit_price']) ? (float)$r['exit_price'] : null;
+                $r['profit'] = isset($r['profit']) ? (float)$r['profit'] : null;
 
                 $out[] = $r;
             }

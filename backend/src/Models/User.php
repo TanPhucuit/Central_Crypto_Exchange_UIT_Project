@@ -45,14 +45,18 @@ class User
             VALUES (?, ?, ?, ?)
         ");
 
-        $success = $stmt->execute([
-            $data['username'],
-            $data['password'],
-            $data['email'],
-            $data['role'] ?? 'normal'
-        ]);
-
-        return $success ? (int)$this->db->lastInsertId() : null;
+        try {
+            $success = $stmt->execute([
+                $data['username'],
+                $data['password'],
+                $data['email'],
+                $data['role'] ?? 'normal'
+            ]);
+            return $success ? (int)$this->db->lastInsertId() : null;
+        } catch (\PDOException $e) {
+            error_log("User create failed: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function update(int $userId, array $data): bool
@@ -86,7 +90,7 @@ class User
     public function updatePassword(int $userId, string $newPassword): bool
     {
         $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE user_id = ?");
-        return $stmt->execute([password_hash($newPassword, PASSWORD_BCRYPT), $userId]);
+        return $stmt->execute([$newPassword, $userId]);
     }
 
     public function setMerchantRole(int $userId, bool $isMerchant = true): bool
@@ -106,5 +110,11 @@ class User
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateUsdtPrice(int $userId, float $price): bool
+    {
+        $stmt = $this->db->prepare("UPDATE users SET usdt_price = ? WHERE user_id = ? AND role = 'merchant'");
+        return $stmt->execute([$price, $userId]);
     }
 }

@@ -26,6 +26,7 @@ import MerchantDashboardPage from './pages/Merchant/MerchantDashboardPage';
 import MerchantP2PPage from './pages/Merchant/MerchantP2PPage';
 import MerchantBankPage from './pages/Merchant/MerchantBankPage';
 import MerchantWalletPage from './pages/Merchant/MerchantWalletPage';
+import MerchantPricePage from './pages/Merchant/MerchantPricePage';
 
 function App() {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -35,11 +36,11 @@ function App() {
     if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
-    
+
     if (allowedRoles && !allowedRoles.includes(user?.role)) {
       return <Navigate to="/dashboard" replace />;
     }
-    
+
     return children;
   };
 
@@ -55,7 +56,7 @@ function App() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/market" element={<MarketPage />} />
-        
+
         {/* User Routes */}
         <Route
           path="/dashboard"
@@ -160,6 +161,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['merchant']}>
               <MerchantWalletPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/merchant/price"
+          element={
+            <ProtectedRoute allowedRoles={['merchant']}>
+              <MerchantPricePage />
             </ProtectedRoute>
           }
         />

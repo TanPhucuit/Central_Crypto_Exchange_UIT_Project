@@ -25,7 +25,7 @@ class UserController
             return Response::error($response, 'User not found', 404);
         }
 
-        unset($userData['password_hash']);
+        unset($userData['password']);
         return Response::success($response, $userData);
     }
 
@@ -48,7 +48,7 @@ class UserController
         }
 
         $userData = $userModel->findById($userId);
-        unset($userData['password_hash']);
+        unset($userData['password']);
         
         return Response::success($response, $userData, 'Profile updated');
     }
@@ -70,16 +70,15 @@ class UserController
 
         $passwordMatch = false;
         
-        // 1. Try verify with hash
-        if ($userModel->verifyPassword($data['old_password'], $userData['password_hash'])) {
-            $passwordMatch = true;
-        }
-        // 2. Fallback: Try direct comparison (legacy/plain text)
-        elseif ($data['old_password'] === $userData['password_hash']) { // In some legacy cases password_hash column might hold plain text
+        // 1. Try verify with 'password' column (which stores plain text or hash depending on implementation)
+        // Schema says 'password', we are using plain text comparison in AuthController::login for now?
+        // Let's support both.
+        
+        $currentPassword = $userData['password'] ?? '';
+        
+        if ($data['old_password'] === $currentPassword) {
              $passwordMatch = true;
-        }
-        // 3. Fallback: Check 'password' column if it exists in fetched data (though findById might not return it if not selected, but let's assume standard fetch)
-        elseif (isset($userData['password']) && $data['old_password'] === $userData['password']) {
+        } elseif ($userModel->verifyPassword($data['old_password'], $currentPassword)) {
              $passwordMatch = true;
         }
 

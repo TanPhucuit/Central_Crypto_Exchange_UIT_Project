@@ -11,7 +11,7 @@ import {
     FiZap,
     FiShield
 } from 'react-icons/fi';
-import { walletAPI, tradingAPI } from '../../services/api';
+import { dashboardAPI } from '../../services/api';
 import cryptoWebSocket from '../../services/cryptoWebSocket';
 import TotalProfitChart from '../../components/ProfitChart/TotalProfitChart';
 import FutureProfitChart from '../../components/ProfitChart/FutureProfitChart';
@@ -19,26 +19,9 @@ import SpotProfitChart from '../../components/ProfitChart/SpotProfitChart';
 
 const DashboardPage = () => {
     const { user } = useSelector((state) => state.auth);
-    const [wallets, setWallets] = useState([]);
-    const [spotAssets, setSpotAssets] = useState([]);
-    const [futuresPositions, setFuturesPositions] = useState([]);
-    const [futuresHistory, setFuturesHistory] = useState([]);
+    const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
     const [prices, setPrices] = useState({});
-
-    const iconMap = {
-        BTC: '₿',
-        ETH: 'Ξ',
-        USDT: '₮',
-        BNB: 'BNB',
-        SOL: 'SOL',
-        XRP: 'XRP',
-        ADA: 'ADA',
-        DOT: 'DOT',
-        DOGE: 'Ð',
-        AVAX: 'AVAX',
-        LTC: 'Ł',
-    };
 
     useEffect(() => {
         loadDashboardData();
@@ -47,21 +30,27 @@ const DashboardPage = () => {
 
     // WebSocket Subscription
     useEffect(() => {
+        if (!summary) return;
+
         const symbols = new Set();
 
         // Add spot symbols
-        spotAssets.forEach(asset => {
-            if (asset.symbol && asset.symbol !== 'USDT') {
-                symbols.add(`${asset.symbol}USDT`);
-            }
-        });
+        if (summary.spot_assets) {
+            summary.spot_assets.forEach(asset => {
+                if (asset.symbol && asset.symbol !== 'USDT') {
+                    symbols.add(`${asset.symbol}USDT`);
+                }
+            });
+        }
 
         // Add futures symbols
-        futuresPositions.forEach(pos => {
-            if (pos.symbol) {
-                symbols.add(pos.symbol.includes('USDT') ? pos.symbol : `${pos.symbol}USDT`);
-            }
-        });
+        if (summary.future_open_positions) {
+            summary.future_open_positions.forEach(pos => {
+                if (pos.symbol) {
+                    symbols.add(pos.symbol.includes('USDT') ? pos.symbol : `${pos.symbol}USDT`);
+                }
+            });
+        }
 
         if (symbols.size === 0) return;
 
@@ -79,63 +68,16 @@ const DashboardPage = () => {
         return () => {
             unsubscribers.forEach(unsub => unsub && unsub());
         };
-    }, [spotAssets, futuresPositions]);
+    }, [summary]);
 
     const loadDashboardData = async () => {
         try {
             setLoading(true);
             const userId = localStorage.getItem('user_id');
-
-            // Load wallets first
-            const walletsRes = await walletAPI.getWallets(userId);
-            const walletsData = Array.isArray(walletsRes) ? walletsRes : (walletsRes.data || []);
-
-            // Find spot and futures wallets
-            const spotWallet = walletsData.find(w => w.type === 'spot');
-            const futuresWallet = walletsData.find(w => w.type === 'future');
-
-            // Load spot assets, futures positions, and futures history
-            const promises = [
-                Promise.resolve(walletsData)
-            ];
-
-            if (spotWallet) {
-                promises.push(
-                    walletAPI.getWalletWithProperties(userId, spotWallet.wallet_id)
-                        .then(res => res.data?.properties || [])
-                        .catch(() => [])
-                );
-            } else {
-                promises.push(Promise.resolve([]));
+            const res = await dashboardAPI.getSummary(userId);
+            if (res.success) {
+                setSummary(res.data);
             }
-
-            promises.push(
-                tradingAPI.getOpenFutures(userId)
-                    .then(res => Array.isArray(res) ? res : (res.data || []))
-                    .catch(() => [])
-            );
-
-            if (futuresWallet) {
-                promises.push(
-                    tradingAPI.getFutureHistory(userId, futuresWallet.wallet_id)
-                        .then(res => Array.isArray(res) ? res : (res.data || []))
-                        .catch(() => [])
-                );
-            } else {
-                promises.push(Promise.resolve([]));
-            }
-
-            const [wallets, spotData, futuresData, historyData] = await Promise.all(promises);
-
-            setWallets(wallets);
-            setSpotAssets(spotData);
-            setFuturesPositions(futuresData);
-            setFuturesHistory(historyData);
-
-            // Debug logs
-            console.log('Futures Positions:', futuresData);
-            console.log('Futures History:', historyData);
-
         } catch (err) {
             console.error('Failed to load dashboard data:', err);
         } finally {
@@ -145,19 +87,20 @@ const DashboardPage = () => {
 
     // Calculate Statistics
     const stats = useMemo(() => {
+        if (!summary) return { totalAssets: 0, spotProfit: 0, futuresProfit: 0, totalProfit: 0, spotAssetsValue: 0 };
+
         // 1. Calculate Spot Assets Value & PnL
         let spotAssetsValue = 0;
         let spotPnL = 0;
 
-        if (Array.isArray(spotAssets)) {
-            spotAssets.forEach(asset => {
+        if (Array.isArray(summary.spot_assets)) {
+            summary.spot_assets.forEach(asset => {
                 if (asset.symbol === 'USDT') return;
 
                 const balance = parseFloat(asset.unit_number || 0);
                 const avgPrice = parseFloat(asset.average_buy_price || 0);
                 const pair = `${asset.symbol}USDT`;
-                // Use real-time price if available, else fallback to API current_price or avgPrice
-                const currentPrice = prices[pair] || parseFloat(asset.current_price || 0) || avgPrice || 0;
+                const currentPrice = prices[pair] || avgPrice || 0;
 
                 const value = balance * currentPrice;
                 spotAssetsValue += value;
@@ -168,63 +111,48 @@ const DashboardPage = () => {
             });
         }
 
-
         // 2. Calculate Futures PnL (Unrealized + Realized)
         let futuresUnrealizedPnL = 0;
-        if (Array.isArray(futuresPositions)) {
-            futuresPositions.forEach(pos => {
+        if (Array.isArray(summary.future_open_positions)) {
+            summary.future_open_positions.forEach(pos => {
                 const pair = pos.symbol.includes('USDT') ? pos.symbol : `${pos.symbol}USDT`;
                 const currentPrice = prices[pair];
 
                 if (currentPrice && parseFloat(pos.entry_price) > 0) {
-                    const entry = parseFloat(pos.entry_price);
-                    const margin = parseFloat(pos.margin || 0);
-                    const leverage = parseFloat(pos.leverage || 1);
-                    // Use position_size if available, otherwise calculate from margin * leverage
-                    const positionSize = parseFloat(pos.position_size) || (margin * leverage);
+                    const entryPrice = parseFloat(pos.entry_price);
+                    const positionSize = parseFloat(pos.position_size || 0);
+                    const side = pos.side;
 
-                    const sideMultiplier = (pos.side === 'buy' || pos.side === 'long') ? 1 : -1;
-
-                    // PnL = ((Current - Entry) / Entry) * PositionSize * SideMultiplier
-                    // Note: PositionSize is in USDT (Notional Value)
-                    futuresUnrealizedPnL += ((currentPrice - entry) / entry) * positionSize * sideMultiplier;
+                    // PnL formula: Long = (current - entry) * size, Short = (entry - current) * size
+                    if (side === 'long' || side === 'buy') {
+                        futuresUnrealizedPnL += (currentPrice - entryPrice) * positionSize;
+                    } else if (side === 'short' || side === 'sell') {
+                        futuresUnrealizedPnL += (entryPrice - currentPrice) * positionSize;
+                    }
                 } else {
                     futuresUnrealizedPnL += parseFloat(pos.unrealized_pnl || 0);
                 }
             });
         }
 
-        let futuresRealizedPnL = 0;
-        if (Array.isArray(futuresHistory)) {
-            futuresHistory.forEach(tx => {
-                if (tx.realized_pnl) {
-                    const val = parseFloat(tx.realized_pnl);
-                    if (!isNaN(val)) {
-                        futuresRealizedPnL += val;
-                    }
-                }
-            });
-        }
-
+        const futuresRealizedPnL = parseFloat(summary.future_closed_profit || 0);
         const futuresTotalPnL = futuresUnrealizedPnL + futuresRealizedPnL;
 
         // 3. Total Assets
-        const spotWalletUSDT = parseFloat(wallets.find(w => w.type === 'spot')?.balance || 0);
-        const futuresWalletUSDT = parseFloat(wallets.find(w => w.type === 'future')?.balance || 0);
-
-        const totalAssets = spotWalletUSDT + futuresWalletUSDT + spotAssetsValue;
+        // summary.total_usdt_balance includes USDT from all wallets
+        const totalAssets = parseFloat(summary.total_usdt_balance || 0) + spotAssetsValue;
 
         // 4. Total Profit
         const totalProfit = spotPnL + futuresTotalPnL;
 
         return {
-            totalAssets: isNaN(totalAssets) ? 0 : totalAssets,
-            spotProfit: isNaN(spotPnL) ? 0 : spotPnL,
-            futuresProfit: isNaN(futuresTotalPnL) ? 0 : futuresTotalPnL,
-            totalProfit: isNaN(totalProfit) ? 0 : totalProfit,
+            totalAssets,
+            spotProfit: spotPnL,
+            futuresProfit: futuresTotalPnL,
+            totalProfit,
             spotAssetsValue
         };
-    }, [wallets, spotAssets, futuresPositions, futuresHistory, prices]);
+    }, [summary, prices]);
 
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('en-US', {
@@ -368,7 +296,7 @@ const DashboardPage = () => {
                         <h3>Lợi Nhuận Spot</h3>
                         <div className="chart-container">
                             <SpotProfitChart
-                                spotHoldings={spotAssets}
+                                spotHoldings={summary?.spot_assets || []}
                                 prices={prices}
                             />
                         </div>
@@ -377,8 +305,8 @@ const DashboardPage = () => {
                         <h3>Lợi Nhuận Futures</h3>
                         <div className="chart-container">
                             <FutureProfitChart
-                                openPositions={futuresPositions}
-                                history={futuresHistory}
+                                openPositions={summary?.future_open_positions || []}
+                                history={summary?.future_closed_orders || []}
                             />
                         </div>
                     </div>
@@ -386,9 +314,10 @@ const DashboardPage = () => {
                         <h3>Tổng Lợi Nhuận</h3>
                         <div className="chart-container">
                             <TotalProfitChart
-                                spotHoldings={spotAssets}
-                                futurePositions={futuresPositions}
-                                futureHistory={futuresHistory}
+                                spotHoldings={summary?.spot_assets || []}
+                                futurePositions={summary?.future_open_positions || []}
+                                futureClosedProfit={summary?.future_closed_profit || 0}
+                                prices={prices}
                             />
                         </div>
                     </div>

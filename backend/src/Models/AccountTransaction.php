@@ -43,15 +43,14 @@ class AccountTransaction
     {
         $stmt = $this->db->prepare("
             INSERT INTO account_transactions 
-            (source_account_number, target_account_number, transaction_amount, note)
-            VALUES (?, ?, ?, ?)
+            (source_account_number, target_account_number, transaction_amount)
+            VALUES (?, ?, ?)
         ");
         
         $success = $stmt->execute([
             $data['source_account'] ?? $data['source_account_number'],
             $data['destination_account_number'] ?? $data['target_account_number'],
-            $data['amount'] ?? $data['transaction_amount'],
-            $data['note'] ?? null
+            $data['amount'] ?? $data['transaction_amount']
         ]);
 
         return $success ? (int)$this->db->lastInsertId() : null;
@@ -97,10 +96,22 @@ class AccountTransaction
         $limit = (int)$limit;
         $placeholders = str_repeat('?,', count($accountNumbers) - 1) . '?';
         $stmt = $this->db->prepare("
-            SELECT * FROM account_transactions 
-            WHERE source_account_number IN ($placeholders) 
-               OR target_account_number IN ($placeholders)
-            ORDER BY ts DESC
+            SELECT 
+                at.*,
+                src_ba.bank_name as source_bank_name,
+                src_u.username as source_account_name,
+                src_u.role as source_role,
+                tgt_ba.bank_name as target_bank_name,
+                tgt_u.username as target_account_name,
+                tgt_u.role as target_role
+            FROM account_transactions at
+            LEFT JOIN bank_accounts src_ba ON at.source_account_number = src_ba.account_number
+            LEFT JOIN users src_u ON src_ba.user_id = src_u.user_id
+            LEFT JOIN bank_accounts tgt_ba ON at.target_account_number = tgt_ba.account_number
+            LEFT JOIN users tgt_u ON tgt_ba.user_id = tgt_u.user_id
+            WHERE at.source_account_number IN ($placeholders) 
+               OR at.target_account_number IN ($placeholders)
+            ORDER BY at.ts DESC
             LIMIT {$limit}
         ");
         $params = array_merge($accountNumbers, $accountNumbers);

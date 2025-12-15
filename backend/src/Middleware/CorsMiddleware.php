@@ -36,8 +36,6 @@ class CorsMiddleware
 
     public function __invoke(Request $request, RequestHandler $handler): Response
     {
-        $config = require __DIR__ . '/../../config/cors.php';
-        
         // Handle preflight OPTIONS request
         if ($request->getMethod() === 'OPTIONS') {
             $response = new Response();
@@ -45,21 +43,10 @@ class CorsMiddleware
             $response = $handler->handle($request);
         }
 
-        $origin = $request->getHeaderLine('Origin') ?? '';
-        $allowedOrigins = $config['allowed_origins'];
-        $allowedOriginValue = $this->resolveAllowedOrigin($origin, $allowedOrigins);
-
-        if ($allowedOriginValue !== null) {
-            $responseOrigin = $allowedOriginValue === '*' ? '*' : $origin;
-
-            $response = $response
-                ->withHeader('Access-Control-Allow-Origin', $responseOrigin)
-                ->withHeader('Access-Control-Allow-Methods', implode(', ', $config['allowed_methods']))
-                ->withHeader('Access-Control-Allow-Headers', implode(', ', $config['allowed_headers']))
-                ->withHeader('Access-Control-Max-Age', (string)$config['max_age'])
-                ->withHeader('Access-Control-Allow-Credentials', 'true');
-        }
-
-        return $response;
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+            ->withHeader('Access-Control-Allow-Credentials', 'true');
     }
 }

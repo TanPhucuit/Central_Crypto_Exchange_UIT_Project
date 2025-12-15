@@ -2,7 +2,68 @@
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-lg);
+  padding: 0;
+  margin: 0;
+}
+
+/* Tab Content Wrapper - Remove all padding/margin */
+.tab-content {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* Toast Notifications */
+.toast-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  min-width: 300px;
+  max-width: 500px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-notification.success {
+  background: linear-gradient(135deg, #05c46b, #04a056);
+  color: white;
+}
+
+.toast-notification.error {
+  background: linear-gradient(135deg, #ef5350, #e53935);
+  color: white;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast-icon {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.toast-message {
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .trading-header {
@@ -1123,24 +1184,31 @@
     border-bottom: none;
   }
 
-  .order-history-card .tag {
-    display: inline-flex;
-    align-items: center;
-    font-size: 12px;
-    padding: 4px 12px;
-    border-radius: 999px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  .tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
   }
 
-  .order-history-card .tag.buy {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--success-color);
+  .tag.buy,
+  .order-history-row .tag.buy,
+  span.tag.buy {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
   }
 
-  .order-history-card .tag.sell {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--danger-color);
+  .tag.sell,
+  .order-history-row .tag.sell,
+  span.tag.sell {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
   }
 
   .chart-card {
@@ -1211,28 +1279,51 @@
   }
 }
 
+/* Asset Container - Full width centering wrapper */
+.assets-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-xl) 0;
+}
+
+/* Assets Tab - Inner wrapper */
+.assets-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 10000px;
+  padding: 0 var(--spacing-lg);
+  /* Điều chỉnh giá trị này để dịch chuyển khung tài sản sang phải */
+  margin-left: 50px;
+}
+
 /* Asset List Styling */
 .asset-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
+  width: 100%;
 }
 
 .asset-row {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr;
   align-items: center;
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid transparent;
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  background: var(--dark-bg-card);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .asset-row:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   border-color: var(--primary-color);
-  transform: translateX(4px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
 }
 
 .asset-col-left {
@@ -1242,14 +1333,14 @@
 }
 
 .asset-icon-wrapper {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 24px;
   color: var(--text-primary);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -1261,12 +1352,12 @@
 
 .asset-symbol {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 18px;
   color: var(--text-primary);
 }
 
 .asset-avg-price {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
@@ -1277,13 +1368,13 @@
 }
 
 .asset-balance {
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 18px;
   color: var(--text-primary);
 }
 
 .asset-value-usdt {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
@@ -1309,11 +1400,11 @@
 
 .pnl-value {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .pnl-percent {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -1375,4 +1466,64 @@
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+/* Container for asset tabs and history below order panel */
+.asset-history-container {
+  margin-top: var(--spacing-lg);
+  width: 100%;
+  background: var(--dark-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.asset-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.asset-tabs button {
+  flex: 1;
+  padding: 16px 24px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.asset-tabs button:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.asset-tabs button.active {
+  color: var(--primary-color);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.asset-tabs button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary-color);
+}
+
+.assets-list-card {
+  padding: var(--spacing-lg);
+}
+
+.assets-list-card .asset-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }

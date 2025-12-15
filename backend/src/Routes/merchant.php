@@ -15,4 +15,7 @@ return function (App $app) {
     $app->get('/api/merchant/bank-accounts', [MerchantController::class, 'getBankAccounts']);
     $app->get('/api/merchant/transactions', [MerchantController::class, 'getTransactionHistory']);
     $app->post('/api/merchant/bank-accounts/default', [MerchantController::class, 'setDefaultBankAccount']);
+    
+    // Update USDT Price
+    $app->post('/api/merchant/price', [MerchantController::class, 'updatePrice']);
 };

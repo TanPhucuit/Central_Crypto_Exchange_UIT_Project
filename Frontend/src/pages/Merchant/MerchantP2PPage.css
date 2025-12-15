@@ -139,6 +139,112 @@
   white-space: nowrap;
 }
 
+.btn-confirm-release {
+  background: linear-gradient(135deg, #05c46b, #04a056) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(5, 196, 107, 0.4) !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-confirm-release:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 196, 107, 0.5) !important;
+}
+
+.btn-confirm-release:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Nút chuyển tiền màu xanh dương */
+.btn-transfer-payment {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.btn-transfer-payment:hover {
+  background: linear-gradient(135deg, #1976D2, #1565C0);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(33, 150, 243, 0.5);
+}
+
+.btn-transfer-payment:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+}
+
+.btn-transfer-payment:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Nút xác nhận mở khóa màu xanh lá */
+.btn-confirm {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #05c46b, #04a056);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(5, 196, 107, 0.4);
+}
+
+.btn-confirm:hover {
+  background: linear-gradient(135deg, #04a056, #038847);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 196, 107, 0.5);
+}
+
+.btn-confirm:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(5, 196, 107, 0.4);
+}
+
+.btn-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.status-badge.paid {
+  background-color: rgba(5, 196, 107, 0.15);
+  color: #05c46b;
+  font-weight: 600;
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
 .text-center {
   text-align: center;
   color: var(--text-secondary);

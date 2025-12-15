@@ -23,7 +23,12 @@ class Database
                     $config['charset']
                 );
 
-                $options = $config['options'];
+                $options = array_merge($config['options'], [
+                    PDO::ATTR_PERSISTENT => true,
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ]);
 
                 // Add SSL/TLS support - required for TiDB Cloud
                 if (!empty($config['ssl']['ca'])) {

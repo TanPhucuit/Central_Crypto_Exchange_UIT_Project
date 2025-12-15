@@ -128,12 +128,13 @@ class TradingController
 
         // Validation
         if (empty($data['user_id']) || empty($data['wallet_id']) || empty($data['symbol']) || empty($data['unit_numbers']) || empty($data['index_price'])) {
-            return Response::error($response, 'Missing required fields', 400);
+            return Response::error($response, 'Missing required fields: user_id, wallet_id, symbol, unit_numbers, index_price', 400);
         }
 
+        // Verify wallet ownership
         $walletModel = new Wallet();
         $wallet = $walletModel->findById($data['wallet_id']);
-
+        
         if (!$wallet || $wallet['user_id'] != $data['user_id']) {
             return Response::error($response, 'Wallet not found', 404);
         }
@@ -146,14 +147,15 @@ class TradingController
         $indexPrice = (float)$data['index_price'];
 
         if ($unitNumbers <= 0 || $indexPrice <= 0) {
-            return Response::error($response, 'Invalid quantity or price', 400);
+            return Response::error($response, 'unit_numbers and index_price must be greater than zero', 400);
         }
 
+        // Check property holdings
         $propertyModel = new Property();
         $property = $propertyModel->getByWalletAndSymbol($wallet['wallet_id'], $data['symbol']);
-
+        
         if (!$property) {
-            return Response::error($response, 'Asset not found', 404);
+            return Response::error($response, 'Asset not found in holdings', 400);
         }
 
         $currentUnits = (float)$property['unit_number'];
@@ -173,15 +175,10 @@ class TradingController
 
             // Update holdings
             $propertyModel->updateUnitNumber($wallet['wallet_id'], $data['symbol'], -$unitNumbers);
-            
-            // Check if we need to delete the property or just leave it at 0
-            // Re-fetch to check balance
             $updatedProperty = $propertyModel->getByWalletAndSymbol($wallet['wallet_id'], $data['symbol']);
-            if ($updatedProperty && (float)$updatedProperty['unit_number'] <= 0.00000001) {
-                 // Optional: Delete if 0, or keep. The original code deleted it.
-                 // Let's keep it simple and just update. If it's 0, it's 0.
-                 // But the original code had a delete logic. Let's respect that if we want to clean up.
-                 // $propertyModel->delete($wallet['wallet_id'], $data['symbol']);
+            if ($updatedProperty && (float)$updatedProperty['unit_number'] <= 0) {
+                $propertyModel->delete($wallet['wallet_id'], $data['symbol']);
+                $updatedProperty = null;
             }
 
             // Update wallet balance
@@ -269,8 +266,11 @@ class TradingController
             return Response::error($response, 'Insufficient margin balance', 400);
         }
 
-        // Per product spec: position size = margin * leverage (user requested)
-        $positionSize = ($margin * $leverage);
+        // Calculate position size in base asset (BTC)
+        // Position value in USDT = margin * leverage
+        // Position size in BTC = position value / entry price
+        $positionValueUSDT = $margin * $leverage;
+        $positionSize = $positionValueUSDT / $entryPrice;
 
         $db = Database::getConnection();
         $futureModel = new FutureOrder();
@@ -279,7 +279,7 @@ class TradingController
         try {
             $db->beginTransaction();
 
-            // Deduct margin from wallet first
+            // Deduct margin from wallet balance
             $updated = $walletModel->setBalance($wallet['wallet_id'], (float)$wallet['balance'] - $margin);
             if (!$updated) {
                 throw new \RuntimeException('Failed to deduct margin from wallet');
@@ -383,17 +383,25 @@ class TradingController
             }
 
             $entryPrice = (float)$order['entry_price'];
-            $positionSize = (float)$order['position_size'];
+            $positionSize = (float)$order['position_size']; // This is in BTC
             $margin = (float)$order['margin'];
             $side = $order['side'];
 
+            // PnL = (price difference) * position size in BTC
             $pnl = $side === 'long'
                 ? ($exitPrice - $entryPrice) * $positionSize
                 : ($entryPrice - $exitPrice) * $positionSize;
 
             // Update order and wallet balance
             $futureModel->close($orderId, $exitPrice, $pnl);
+            // Return margin + PnL to wallet
             $newBalance = (float)$lockedWallet['balance'] + $margin + $pnl;
+            
+            // Check if final balance is negative
+            if ($newBalance < 0) {
+                throw new \RuntimeException('Insufficient balance. Final balance would be negative: ' . $newBalance);
+            }
+            
             $walletModel->setBalance($lockedWallet['wallet_id'], $newBalance);
 
             $db->commit();

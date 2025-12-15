@@ -39,6 +39,20 @@ class BankAccountController
 
         $bankModel = new BankAccount();
         
+        // Check if account already exists
+        if ($bankModel->findByAccountNumber($data['account_number'])) {
+            return Response::error($response, 'Bank account already exists', 409);
+        }
+
+        // Set default balance to 100,000,000 VND
+        $data['account_balance'] = 100000000;
+
+        $success = $bankModel->create($data);
+
+        if (!$success) {
+            return Response::error($response, 'Failed to create bank account', 500);
+        }
+
         $account = $bankModel->findByAccountNumber($data['account_number']);
         return Response::success($response, $account, 'Bank account created', 201);
     }
@@ -104,8 +118,7 @@ class BankAccountController
             $transactionId = $transactionModel->create([
                 'source_account_number' => $sourceAccount,
                 'target_account_number' => $targetAccount,
-                'transaction_amount' => $amount,
-                'note' => $note,
+                'transaction_amount' => $amount
             ]);
 
             return Response::success($response, [

@@ -237,28 +237,72 @@ const BankAccountPage = () => {
 
   const renderTransaction = (tx) => {
     const isIncoming = tx.type === 'incoming';
-    const directionLabel = isIncoming ? 'Nhận tiền' : 'Chuyển đi';
-    const counterparty = isIncoming ? tx.source_account : tx.target_account;
+    const directionLabel = isIncoming ? '📥 Nhận tiền' : '📤 Chuyển đi';
+    const counterpartyAccount = isIncoming ? tx.source_account : tx.target_account;
+    
+    // Get counterparty info with merchant detection
+    const counterpartyRole = isIncoming ? tx.source_role : tx.target_role;
+    const counterpartyNameRaw = isIncoming ? tx.source_account_name : tx.target_account_name;
+    const counterpartyName = counterpartyRole === 'merchant' 
+      ? `${counterpartyNameRaw} (Merchant)` 
+      : counterpartyNameRaw || 'Merchant';
+    
+    const counterpartyBank = isIncoming ? tx.source_bank_name : tx.target_bank_name;
     const prefix = isIncoming ? '+' : '-';
     const note = tx.note?.trim() || 'Không có nội dung';
     const timestamp = tx.timestamp ? new Date(tx.timestamp).toLocaleString('vi-VN') : '--';
+
+    // Find my account info for this transaction
+    const myAccount = isIncoming 
+      ? bankAccounts.find(acc => acc.account_number === tx.target_account)
+      : bankAccounts.find(acc => acc.account_number === tx.source_account);
+    
+    const myAccountLabel = myAccount 
+      ? `${myAccount.bank_name} - ${myAccount.account_number}`
+      : (isIncoming ? tx.target_account : tx.source_account);
 
     return (
       <div key={tx.transaction_id} className="history-item">
         <div className={`history-indicator ${isIncoming ? 'incoming' : 'outgoing'}`} />
         <div className="history-content">
           <div className="history-row">
-            <strong>{directionLabel}</strong>
+            <div className="history-title">
+              <strong>{directionLabel}</strong>
+              <span className="history-id">#{tx.transaction_id}</span>
+            </div>
             <span className={`history-amount ${isIncoming ? 'incoming' : 'outgoing'}`}>
-              {prefix}
-              {Number(tx.amount || 0).toLocaleString('vi-VN')} VND
+              {prefix}{Number(tx.amount || 0).toLocaleString('vi-VN')} VND
             </span>
           </div>
-          <div className="history-row subtle">
-            <span>{isIncoming ? 'Từ' : 'Đến'}: {counterparty || '---'}</span>
-            <span>{timestamp}</span>
+          
+          <div className="history-details">
+            <div className="history-detail-row">
+              <span className="detail-label">{isIncoming ? '📍 Tài khoản nhận:' : '📍 Tài khoản gửi:'}</span>
+              <span className="detail-value">{myAccountLabel}</span>
+            </div>
+            <div className="history-detail-row">
+              <span className="detail-label">{isIncoming ? '👤 Người gửi:' : '👤 Người nhận:'}</span>
+              <span className="detail-value">{counterpartyName || 'Không rõ'}</span>
+            </div>
+            <div className="history-detail-row">
+              <span className="detail-label">{isIncoming ? '🏦 Ngân hàng gửi:' : '🏦 Ngân hàng nhận:'}</span>
+              <span className="detail-value">{counterpartyBank || (counterpartyRole === 'merchant' ? counterpartyNameRaw + ' Bank' : 'Merchant Bank')}</span>
+            </div>
+            <div className="history-detail-row">
+              <span className="detail-label">{isIncoming ? '📋 STK gửi:' : '📋 STK nhận:'}</span>
+              <span className="detail-value">{counterpartyAccount || 'Không rõ'}</span>
+            </div>
+            <div className="history-detail-row">
+              <span className="detail-label">🕒 Thời gian:</span>
+              <span className="detail-value">{timestamp}</span>
+            </div>
           </div>
-          <p className="history-note">{note}</p>
+          
+          {note && note !== 'Không có nội dung' && (
+            <div className="history-note">
+              <strong>💬 Nội dung:</strong> {note}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -270,14 +314,6 @@ const BankAccountPage = () => {
         <div>
           <h1>Tài khoản ngân hàng</h1>
           <p className="text-secondary">Liên kết ngân hàng và chuyển khoản nội bộ an toàn</p>
-        </div>
-        <div className="header-actions">
-          <button className="btn btn-secondary" onClick={handleTransfer}>
-            <FiSend /> Chuyển khoản
-          </button>
-          <button className="btn btn-primary" onClick={handleAddAccount}>
-            <FiPlus /> Liên kết tài khoản
-          </button>
         </div>
       </div>
 
@@ -302,10 +338,10 @@ const BankAccountPage = () => {
             </div>
             <div className="bank-hero-actions">
               <button className="action-chip" onClick={handleTransfer}>
-                <FiSend /> Tạo lệnh chuyển
+                <FiSend /> Giao dịch
               </button>
               <button className="action-chip ghost" onClick={handleAddAccount}>
-                Liên kết tài khoản
+                <FiPlus /> Liên kết tài khoản
               </button>
             </div>
           </div>
@@ -372,36 +408,24 @@ const BankAccountPage = () => {
             </div>
           </div>
 
-          <div className="bank-info-layout">
-            <div className="bank-note-card">
-              <h3>Lưu ý quan trọng</h3>
-              <ul>
-                <li>Tài khoản ngân hàng phải trùng tên với chủ tài khoản Cexora</li>
-                <li>Hệ thống sẽ xác minh tài khoản trong vòng 24 giờ</li>
-                <li>Mỗi người dùng có thể liên kết tối đa 5 tài khoản</li>
-                <li>Chỉ tài khoản đã xác minh mới có thể sử dụng cho giao dịch P2P</li>
-              </ul>
-            </div>
-
-            <div className="bank-history-card">
-              <div className="panel-header">
-                <div>
-                  <h3>Lịch sử chuyển khoản</h3>
-                  <p className="panel-sub">Theo dõi dòng tiền vào/ra tài khoản ngân hàng</p>
-                </div>
-                <span className="badge">{transactions.length} giao dịch</span>
+          <div className="bank-history-card-fullwidth">
+            <div className="panel-header">
+              <div>
+                <h3>Lịch sử giao dịch</h3>
+                <p className="panel-sub">Theo dõi dòng tiền vào/ra tài khoản ngân hàng</p>
               </div>
-
-              {transactionsLoading ? (
-                <p className="empty-state">Đang tải lịch sử giao dịch...</p>
-              ) : transactions.length === 0 ? (
-                <p className="empty-state">Chưa có giao dịch chuyển khoản nào</p>
-              ) : (
-                <div className="history-list">
-                  {transactions.map(renderTransaction)}
-                </div>
-              )}
+              <span className="badge">{transactions.length} giao dịch</span>
             </div>
+
+            {transactionsLoading ? (
+              <p className="empty-state">Đang tải lịch sử giao dịch...</p>
+            ) : transactions.length === 0 ? (
+              <p className="empty-state">Chưa có giao dịch nào</p>
+            ) : (
+              <div className="history-list">
+                {transactions.map(renderTransaction)}
+              </div>
+            )}
           </div>
         </>
       )}

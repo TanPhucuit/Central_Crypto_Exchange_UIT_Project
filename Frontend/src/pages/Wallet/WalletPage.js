@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { walletAPI, tradingAPI } from '../../services/api';
 import cryptoWebSocket from '../../services/cryptoWebSocket';
 import binanceAPI from '../../services/binanceAPI';
+import APITester from '../../components/APITester/APITester';
 import './WalletPage.css';
 
 const WalletPage = () => {
@@ -26,6 +27,9 @@ const WalletPage = () => {
   });
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferMessage, setTransferMessage] = useState({ type: '', text: '' });
+
+  // Toast notification state
+  const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   // Icon mapping for different crypto symbols
   const iconMap = {
@@ -240,15 +244,22 @@ const WalletPage = () => {
 
       if (response.success) {
         setTransferMessage({ type: 'success', text: 'Chuyển khoản thành công!' });
+        setToast({ show: true, message: 'Chuyển khoản thành công!', type: 'success' });
         setTimeout(() => {
           setShowTransferModal(false);
           setTransferMessage({ type: '', text: '' });
           setTransferData({ ...transferData, amount: '', note: '' });
           loadWalletData(); // Reload balances
-        }, 1500);
+          setToast({ show: false, message: '', type: '' });
+        }, 3000);
       }
     } catch (err) {
-      setTransferMessage({ type: 'error', text: err.message || 'Chuyển khoản thất bại' });
+      const errorMsg = err.message || 'Chuyển khoản thất bại';
+      setTransferMessage({ type: 'error', text: errorMsg });
+      setToast({ show: true, message: errorMsg, type: 'error' });
+      setTimeout(() => {
+        setToast({ show: false, message: '', type: '' });
+      }, 3000);
     } finally {
       setTransferLoading(false);
     }
@@ -282,6 +293,11 @@ const WalletPage = () => {
           <button className="btn btn-primary" onClick={loadWalletData}>
             Thử lại
           </button>
+
+          {/* API Connection Tester for debugging */}
+          <div style={{ marginTop: '24px' }}>
+            <APITester />
+          </div>
         </div>
       )}
 
@@ -506,6 +522,15 @@ const WalletPage = () => {
           </div>
         )
       }
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast-notification ${toast.type}`}>
+          <div className="toast-content">
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div >
   );
 };

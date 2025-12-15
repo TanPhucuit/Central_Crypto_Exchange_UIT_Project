@@ -22,8 +22,8 @@ class AuthController
             return Response::error($response, 'Invalid email format', 400);
         }
 
-        if (strlen($data['password']) < 6) {
-            return Response::error($response, 'Password must be at least 6 characters', 400);
+        if (strlen($data['password']) < 5) {
+            return Response::error($response, 'Password must be more than 4 characters', 400);
         }
 
         $userModel = new User();
@@ -38,43 +38,60 @@ class AuthController
         }
 
         // Create user
+        error_log("Attempting to create user...");
         $userId = $userModel->create([
             'username' => $data['username'],
             'email' => $data['email'],
             'password' => $data['password'],
             'role' => $data['role'] ?? 'normal'
         ]);
+        error_log("User created: " . ($userId ?: 'FAIL'));
 
         if (!$userId) {
             return Response::error($response, 'Failed to create user', 500);
         }
 
         // Auto-create wallets
+        // Auto-create wallets
         $walletModel = new \App\Models\Wallet();
-        
-        // Create Fund Wallet
-        $walletModel->create([
-            'user_id' => $userId,
-            'type' => 'fund',
-            'balance' => 0
-        ]);
+        $isMerchant = isset($data['role']) && $data['role'] === 'merchant';
+        $createdWallets = [];
 
-        // Create Spot Wallet
-        $walletModel->create([
-            'user_id' => $userId,
-            'type' => 'spot',
-            'balance' => 0
-        ]);
+        if ($isMerchant) {
+            // Merchant: Create 1 wallet (Merchant) with 10,000 USDT
+            // We use 'merchant' type as requested
+            $walletId = $walletModel->create($userId, 'merchant', 10000);
+            if (!$walletId) {
+                 error_log("Failed to create merchant wallet for user_id=$userId");
+            } else {
+                 $createdWallets[] = 'merchant';
+            }
+        } else {
+            // Normal User: Create Future and Spot wallets
+            $walletModel->create($userId, 'future', 0);
+            $spotWalletId = $walletModel->create($userId, 'spot', 0);
+            $createdWallets = ['future', 'spot'];
 
-        // Create Future Wallet
-        $walletModel->create([
-            'user_id' => $userId,
-            'type' => 'future',
-            'balance' => 0
-        ]);
+            // Initialize 10 default assets in Properties for Spot Wallet
+            if ($spotWalletId) {
+                $defaultAssets = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'TRX', 'DOT', 'LTC'];
+                $propertyModel = new \App\Models\Property();
+                foreach ($defaultAssets as $symbol) {
+                    $propertyModel->upsert([
+                        'wallet_id' => $spotWalletId,
+                        'symbol' => $symbol,
+                        'unit_number' => 0,
+                        'average_buy_price' => 0,
+                        'cost_basis' => 0
+                    ]);
+                }
+            }
+        }
+
+        error_log("Wallets created for user $userId: " . implode(', ', $createdWallets));
 
         // If user is merchant, create default bank account
-        if (isset($data['role']) && $data['role'] === 'merchant') {
+        if ($isMerchant) {
             $bankModel = new \App\Models\BankAccount();
             $bankModel->create([
                 'account_number' => 'MERCHANT-' . time(), // Generate unique account number
@@ -85,7 +102,7 @@ class AuthController
         }
 
         $user = $userModel->findById($userId);
-        unset($user['password_hash']);
+        unset($user['password']);
 
         return Response::success($response, [
             'user' => $user,
@@ -156,7 +173,7 @@ class AuthController
             return Response::error($response, 'User not found', 404);
         }
 
-        unset($user['password_hash']);
+        unset($user['password']);
 
         return Response::success($response, $user);
     }

@@ -1,10 +1,10 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { 
-  FiHome, 
-  FiTrendingUp, 
-  FiDollarSign, 
+import {
+  FiHome,
+  FiTrendingUp,
+  FiDollarSign,
   FiPieChart,
   FiCreditCard,
   FiUser,
@@ -23,12 +23,12 @@ const Sidebar = () => {
     { path: '/trading/futures', icon: FiPieChart, label: 'Giao dịch Futures' },
     { path: '/trading/p2p', icon: FiLayers, label: 'Giao dịch P2P' },
     { path: '/bank-accounts', icon: FiCreditCard, label: 'Tài khoản NH' },
-    { path: '/transactions', icon: FiClock, label: 'Lịch sử GD' },
     { path: '/profile', icon: FiUser, label: 'Tài khoản' },
   ];
 
   const merchantMenuItems = [
     { path: '/merchant/dashboard', icon: FiHome, label: 'Dashboard & P2P' },
+    { path: '/merchant/price', icon: FiDollarSign, label: 'Quản lý giá USDT' },
     { path: '/merchant/bank', icon: FiCreditCard, label: 'Tài khoản NH' },
     { path: '/merchant/wallet', icon: FiDollarSign, label: 'Ví của tôi' },
   ];
@@ -44,7 +44,7 @@ const Sidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) => 
+            className={({ isActive }) =>
               `sidebar-link ${isActive ? 'active' : ''}`
             }
           >
