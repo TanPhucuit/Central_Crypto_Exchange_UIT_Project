@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FiTrendingUp, FiAlertTriangle, FiArrowUpCircle, FiArrowDownCircle } from 'react-icons/fi';
 import LivePriceChart from '../../components/LivePriceChart/LivePriceChart';
 import { useAuth } from '../../hooks/useAuth';
@@ -332,80 +331,7 @@ const MAX_LEVERAGE = 5;
 
 
 
-    // coin-grid will be positioned inside the chart card (CSS handles positioning)
 
-    const CoinGridPortal = ({ pairs, selectedPair, onSelect, priceTickers }) => {
-      const portalRef = useRef(null);
-
-      useEffect(() => {
-        const container = document.createElement('div');
-        container.className = 'coin-grid-portal';
-        // container styles (left/top/width applied dynamically)
-        container.style.position = 'fixed';
-        // Let pointer events pass through the container so page/chart can be scrolled.
-        // Individual `.coin-card` elements remain clickable via CSS (.coin-card { pointer-events: auto }).
-        container.style.pointerEvents = 'none';
-        container.style.zIndex = '60';
-        document.body.appendChild(container);
-        portalRef.current = container;
-
-        // portal container should not intercept pointer events by default
-
-        const update = () => {
-          try {
-            const chartEl = document.querySelector('.trading-full-width .chart-card');
-            const tabsEl = document.querySelector('.tabs') || document.querySelector('.trading-pair-header') || document.querySelector('header');
-            const tabsRect = tabsEl ? tabsEl.getBoundingClientRect() : null;
-            const topFromTabs = tabsRect ? Math.ceil(tabsRect.bottom) + 12 : 90;
-            if (chartEl) {
-              const r = chartEl.getBoundingClientRect();
-              const left = Math.max(Math.round(r.left + 12), 12);
-              const width = Math.max(Math.round(r.width - 24), 280);
-              const top = Math.max(Math.round(r.top + 12), topFromTabs);
-              container.style.left = `${left}px`;
-              container.style.top = `${top}px`;
-              container.style.width = `${width}px`;
-            }
-          } catch (e) {
-            // ignore
-          }
-        };
-
-        // do not add wheel/touch listeners here; use CSS pointer-events so scroll passes through
-
-        update();
-        window.addEventListener('resize', update);
-        window.addEventListener('scroll', update, true);
-        return () => {
-          window.removeEventListener('resize', update);
-          window.removeEventListener('scroll', update, true);
-          // No wheel/touch listeners were attached; avoid referencing undefined handlers
-          try {
-            if (portalRef.current) document.body.removeChild(portalRef.current);
-          } catch (e) {
-            // ignore
-          }
-        };
-      }, []);
-
-      if (!portalRef.current) return null;
-
-      return createPortal(
-        <div className="coin-grid">
-          {pairs.map((pair) => (
-            <div
-              key={pair.symbol}
-              className={`coin-card ${selectedPair === pair.symbol ? 'active' : ''}`}
-              onClick={() => onSelect(pair.symbol)}
-            >
-              <h3>{pair.name}</h3>
-              <p>{formatNumber(priceTickers[pair.symbol]?.price || 0)} USDT</p>
-            </div>
-          ))}
-        </div>,
-        portalRef.current
-      );
-    };
 
     return (
       <div className="futures-trading-page">
@@ -428,16 +354,22 @@ const MAX_LEVERAGE = 5;
         )}
         
         <div className="trading-full-width">
+          <div className="coin-grid">
+            {SUPPORTED_PAIRS.map((pair) => (
+              <div
+                key={pair.symbol}
+                className={`coin-card ${selectedPair === pair.symbol ? 'active' : ''}`}
+                onClick={() => setSelectedPair(pair.symbol)}
+              >
+                <h3>{pair.name}</h3>
+                <p>{formatNumber(priceTickers[pair.symbol]?.price || 0)} USDT</p>
+              </div>
+            ))}
+          </div>
+
             <div className="chart-card" style={{ width: '100%', backgroundColor: '#000' }}>
               <LivePriceChart symbol={selectedPair.replace('/', '')} height={520} />
             </div>
-            {/* Render coin selector into a portal so it doesn't get trapped by stacking contexts */}
-            <CoinGridPortal
-              pairs={SUPPORTED_PAIRS}
-              selectedPair={selectedPair}
-              onSelect={(s) => setSelectedPair(s)}
-              priceTickers={priceTickers}
-            />
 
           <div className="order-panel-compact">
               <div className="wallet-banner">

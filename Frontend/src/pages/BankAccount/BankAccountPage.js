@@ -217,7 +217,7 @@ const BankAccountPage = () => {
       });
 
       if (response.success) {
-        setTimedSuccess('Chuyển khoản nội bộ thành công');
+        setTimedSuccess('Chuyển khoản thành công');
         setShowTransferModal(false);
         setTransferData(initialTransferData);
         loadBankAccounts();
@@ -313,7 +313,7 @@ const BankAccountPage = () => {
       <div className="page-header">
         <div>
           <h1>Tài khoản ngân hàng</h1>
-          <p className="text-secondary">Liên kết ngân hàng và chuyển khoản nội bộ an toàn</p>
+          <p className="text-secondary">Liên kết ngân hàng và chuyển khoản an toàn</p>
         </div>
       </div>
 
@@ -435,7 +435,7 @@ const BankAccountPage = () => {
         <div className="modal-overlay" onClick={() => setShowTransferModal(false)}>
           <div className="modal-content glass-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Chuyển khoản nội bộ</h3>
+              <h3>Chuyển khoản ngân hàng</h3>
               <button className="modal-close" onClick={() => setShowTransferModal(false)}>x</button>
             </div>
             <form onSubmit={handleTransferSubmit} className="transfer-form">
