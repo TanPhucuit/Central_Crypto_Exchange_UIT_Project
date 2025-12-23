@@ -110,7 +110,7 @@ CREATE TABLE `p2p_orders` (
   `transaction_id` bigint(20) unsigned DEFAULT NULL,
   `amount` decimal(28,8) NOT NULL,
   `price` decimal(28,8) NOT NULL,
-  `status` enum('pending','completed','cancelled','disputed') NOT NULL DEFAULT 'pending',
+  `status` enum('pending','completed','cancelled','banked') NOT NULL DEFAULT 'pending',
   `created_at` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
    type ENUM ('buy','sell'),

@@ -36,17 +36,48 @@ class CorsMiddleware
 
     public function __invoke(Request $request, RequestHandler $handler): Response
     {
-        // Handle preflight OPTIONS request
+        // Load allowed origins from config
+        $config = require __DIR__ . '/../../config/cors.php';
+        $allowedOrigins = $config['allowed_origins'] ?? ['http://localhost:3000'];
+
+        $origin = $request->getHeaderLine('Origin');
+        $allowOrigin = null;
+        if ($origin) {
+            foreach ($allowedOrigins as $allowed) {
+                if ($allowed === '*') {
+                    $allowOrigin = $origin;
+                    break;
+                }
+                if ($allowed === $origin) {
+                    $allowOrigin = $origin;
+                    break;
+                }
+                if (strpos($allowed, '*') !== false) {
+                    $pattern = '#^' . str_replace('\\*', '.*', preg_quote($allowed, '#')) . '$#';
+                    if (preg_match($pattern, $origin)) {
+                        $allowOrigin = $origin;
+                        break;
+                    }
+                }
+            }
+        }
+        // Nếu không hợp lệ hoặc không có Origin thì trả về *
+        if (!$allowOrigin) {
+            $allowOrigin = '*';
+        }
+
         if ($request->getMethod() === 'OPTIONS') {
             $response = new Response();
         } else {
             $response = $handler->handle($request);
         }
 
-        return $response
-            ->withHeader('Access-Control-Allow-Origin', '*')
+        $response = $response
             ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
             ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
             ->withHeader('Access-Control-Allow-Credentials', 'true');
+
+        $response = $response->withHeader('Access-Control-Allow-Origin', $allowOrigin);
+        return $response;
     }
 }
