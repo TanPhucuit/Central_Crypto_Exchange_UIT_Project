@@ -41,43 +41,36 @@ class CorsMiddleware
         $allowedOrigins = $config['allowed_origins'] ?? ['http://localhost:3000'];
 
         $origin = $request->getHeaderLine('Origin');
-        $allowOrigin = null;
-        if ($origin) {
-            foreach ($allowedOrigins as $allowed) {
-                if ($allowed === '*') {
-                    $allowOrigin = $origin;
-                    break;
-                }
-                if ($allowed === $origin) {
-                    $allowOrigin = $origin;
-                    break;
-                }
-                if (strpos($allowed, '*') !== false) {
-                    $pattern = '#^' . str_replace('\\*', '.*', preg_quote($allowed, '#')) . '$#';
-                    if (preg_match($pattern, $origin)) {
-                        $allowOrigin = $origin;
-                        break;
-                    }
-                }
-            }
-        }
-        // Nếu không hợp lệ hoặc không có Origin thì trả về *
+        $allowOrigin = $this->resolveAllowedOrigin($origin, $allowedOrigins);
+        
+        // If origin not in allowed list, default to first allowed origin or *
         if (!$allowOrigin) {
-            $allowOrigin = '*';
+            $allowOrigin = $allowedOrigins[0] ?? '*';
         }
 
+        // Handle preflight OPTIONS request
         if ($request->getMethod() === 'OPTIONS') {
             $response = new Response();
-        } else {
-            $response = $handler->handle($request);
+            $response = $response
+                ->withHeader('Access-Control-Allow-Origin', $allowOrigin)
+                ->withHeader('Access-Control-Allow-Methods', implode(', ', $config['allowed_methods'] ?? ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']))
+                ->withHeader('Access-Control-Allow-Headers', implode(', ', $config['allowed_headers'] ?? ['Content-Type', 'Authorization', 'X-Requested-With']))
+                ->withHeader('Access-Control-Allow-Credentials', 'true')
+                ->withHeader('Access-Control-Max-Age', (string)($config['max_age'] ?? 3600))
+                ->withStatus(200);
+            return $response;
         }
 
+        // Process the request
+        $response = $handler->handle($request);
+
+        // Add CORS headers to response
         $response = $response
-            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+            ->withHeader('Access-Control-Allow-Origin', $allowOrigin)
+            ->withHeader('Access-Control-Allow-Methods', implode(', ', $config['allowed_methods'] ?? ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']))
+            ->withHeader('Access-Control-Allow-Headers', implode(', ', $config['allowed_headers'] ?? ['Content-Type', 'Authorization', 'X-Requested-With']))
             ->withHeader('Access-Control-Allow-Credentials', 'true');
 
-        $response = $response->withHeader('Access-Control-Allow-Origin', $allowOrigin);
         return $response;
     }
 }

@@ -23,15 +23,15 @@ $app->addRoutingMiddleware();
 // Add Body Parsing Middleware (for JSON and form data)
 $app->addBodyParsingMiddleware();
 
-// Add CORS Middleware
-$app->add(CorsMiddleware::class);
-
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(
     $_ENV['APP_DEBUG'] === 'true',
     true,
     true
 );
+
+// Add CORS Middleware (must be after error middleware to handle all responses)
+$app->add(CorsMiddleware::class);
 
 // Register Routes
 $routes = [
